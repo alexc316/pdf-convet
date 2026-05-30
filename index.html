@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Herramientas PDF Pro</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+    <style>
+        :root {
+            --bg-color: rgba(0,0,0,0.6);
+            --text-color: white;
+            --primary-color: red;
+            --secondary-color: black;
+        }
+        [data-theme="dark"] {
+            --bg-color: rgba(255,255,255,0.8);
+            --text-color: black;
+            --primary-color: black;
+            --secondary-color: red;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Arial', sans-serif;
+            background: url('https://tse2.mm.bing.net/th/id/OIP.d6yl4r6soww8yFiolsnYTgHaNK?rs=1&pid=ImgDetMain') no-repeat center center fixed;
+            background-size: cover;
+            color: var(--text-color);
+            text-align: center;
+            overflow-x: hidden;
+            transition: background 0.3s, color 0.3s;
+        }
+        .logo {
+            font-size: 50px;
+            margin: 20px 0;
+            animation: bounce 2s infinite;
+        }
+        @keyframes bounce {
+            0%, 100% {transform: translateY(0);}
+            50% {transform: translateY(-10px);}
+        }
+        h1, h2 {
+            color: var(--text-color);
+            text-shadow: 2px 2px 5px var(--secondary-color);
+        }
+        h1 span, h2 span {
+            color: var(--primary-color);
+        }
+        .container {
+            background: var(--bg-color);
+            margin: 20px auto;
+            padding: 30px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 600px;
+            animation: fadeIn 1s ease;
+        }
+        .buttons {
+            margin: 20px 0;
+        }
+        button {
+            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+            color: var(--text-color);
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            border-radius: 10px;
+            margin: 10px;
+            cursor: pointer;
+            transition: background 0.3s ease, transform 0.2s ease;
+        }
+        button:hover {
+            background: linear-gradient(45deg, var(--secondary-color), var(--primary-color));
+            transform: scale(1.05);
+        }
+        .theme-toggle {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: var(--bg-color);
+            color: var(--text-color);
+            padding: 10px 15px;
+            border-radius: 50px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        section {
+            display: none;
+            margin-top: 20px;
+            animation: fadeIn 1s ease;
+        }
+        input[type="file"] {
+            margin: 15px 0;
+            font-size: 16px;
+        }
+        .dropzone {
+            border: 2px dashed var(--text-color);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            transition: background 0.3s ease;
+        }
+        .dropzone.dragover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        .progress {
+            width: 100%;
+            background: rgba(255,255,255,0.3);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 20px;
+            height: 20px;
+        }
+        .progress-bar {
+            height: 100%;
+            width: 0;
+            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+            transition: width 0.3s ease;
+        }
+        #mensajeFinal {
+            margin-top: 20px;
+            font-size: 24px;
+            color: lime;
+            display: none;
+            animation: fadeIn 1s ease;
+        }
+        @keyframes fadeIn {
+            from {opacity: 0; transform: translateY(20px);}
+            to {opacity: 1; transform: translateY(0);}
+        }
+    </style>
+</head>
+<body>
+
+    <div class="theme-toggle" onclick="toggleTheme()">🌗 Tema</div>
+
+    <div class="container">
+        <div class="logo">📄✨</div>
+        <h1><span>HERRAMIENTAS</span> PDF</h1>
+
+        <div class="buttons">
+            <button onclick="mostrarSeccion('imagenes')">Convertir Imágenes a PDF</button>
+            <button onclick="mostrarSeccion('combinar')">Combinar varios PDFs</button>
+        </div>
+
+        <section id="imagenes">
+            <h2><span>Convertir</span> Imágenes</h2>
+            <div id="dropzoneImg" class="dropzone">Arrastra tus imágenes aquí o selecciona</div>
+            <input type="file" id="imgInput" accept="image/*" multiple style="display: none;">
+            <br>
+            <button onclick="convertirImagenesAPDF()">Crear PDF de Imágenes</button>
+            <div class="progress" id="progressImg" style="display:none;">
+                <div class="progress-bar" id="progressBarImg"></div>
+            </div>
+        </section>
+
+        <section id="combinar">
+            <h2><span>Combinar</span> PDFs</h2>
+            <div id="dropzonePdf" class="dropzone">Arrastra tus PDFs aquí o selecciona</div>
+            <input type="file" id="pdfInput" accept="application/pdf" multiple style="display: none;">
+            <br>
+            <button onclick="combinarPDFs()">Combinar PDFs</button>
+            <div class="progress" id="progressPdf" style="display:none;">
+                <div class="progress-bar" id="progressBarPdf"></div>
+            </div>
+        </section>
+
+        <div id="mensajeFinal">¡Listo! 🎉</div>
+    </div>
+
+    <script>
+        function mostrarSeccion(id) {
+            document.getElementById('imagenes').style.display = 'none';
+            document.getElementById('combinar').style.display = 'none';
+            document.getElementById('mensajeFinal').style.display = 'none';
+            document.getElementById(id).style.display = 'block';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        async function convertirImagenesAPDF() {
+            const input = document.getElementById('imgInput');
+            if (input.files.length === 0) {
+                alert('Por favor selecciona al menos una imagen.');
+                return;
+            }
+
+            document.getElementById('progressImg').style.display = 'block';
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF();
+
+            for (let i = 0; i < input.files.length; i++) {
+                const file = input.files[i];
+                const reader = new FileReader();
+
+                await new Promise((resolve) => {
+                    reader.onload = function(e) {
+                        const img = new Image();
+                        img.onload = function() {
+                            const imgWidth = pdf.internal.pageSize.getWidth();
+                            const imgHeight = (img.height * imgWidth) / img.width;
+                            if (i !== 0) {
+                                pdf.addPage();
+                            }
+                            pdf.addImage(img, 'JPEG', 0, 0, imgWidth, imgHeight);
+                            document.getElementById('progressBarImg').style.width = ((i+1) / input.files.length * 100) + '%';
+                            resolve();
+                        };
+                        img.src = e.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                });
+            }
+
+            pdf.save('imagenes_convertidas.pdf');
+            document.getElementById('progressImg').style.display = 'none';
+            mostrarMensajeFinal();
+        }
+
+        async function combinarPDFs() {
+            const input = document.getElementById('pdfInput');
+            if (input.files.length < 2) {
+                alert('Por favor selecciona al menos dos archivos PDF.');
+                return;
+            }
+
+            document.getElementById('progressPdf').style.display = 'block';
+
+            const pdfDocs = [];
+            for (let i = 0; i < input.files.length; i++) {
+                const file = input.files[i];
+                const arrayBuffer = await file.arrayBuffer();
+                const pdfDoc = await PDFLib.PDFDocument.load(arrayBuffer);
+                pdfDocs.push(pdfDoc);
+                document.getElementById('progressBarPdf').style.width = ((i+1) / input.files.length * 100) + '%';
+            }
+
+            const mergedPdf = await PDFLib.PDFDocument.create();
+
+            for (const pdfDoc of pdfDocs) {
+                const copiedPages = await mergedPdf.copyPages(pdfDoc, pdfDoc.getPageIndices());
+                copiedPages.forEach((page) => mergedPdf.addPage(page));
+            }
+
+            const mergedPdfBytes = await mergedPdf.save();
+            const blob = new Blob([mergedPdfBytes], { type: 'application/pdf' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'pdfs_combinados.pdf';
+            link.click();
+
+            document.getElementById('progressPdf').style.display = 'none';
+            mostrarMensajeFinal();
+        }
+
+        function mostrarMensajeFinal() {
+            document.getElementById('mensajeFinal').style.display = 'block';
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        }
+
+        function toggleTheme() {
+            const body = document.body;
+            if (body.getAttribute('data-theme') === 'dark') {
+                body.removeAttribute('data-theme');
+            } else {
+                body.setAttribute('data-theme', 'dark');
+            }
+        }
+
+        // Drag & Drop imágenes
+        const dropzoneImg = document.getElementById('dropzoneImg');
+        dropzoneImg.addEventListener('click', () => document.getElementById('imgInput').click());
+        dropzoneImg.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropzoneImg.classList.add('dragover');
+        });
+        dropzoneImg.addEventListener('dragleave', () => dropzoneImg.classList.remove('dragover'));
+        dropzoneImg.addEventListener('drop', (e) => {
+            e.preventDefault();
+            document.getElementById('imgInput').files = e.dataTransfer.files;
+            dropzoneImg.classList.remove('dragover');
+        });
+
+        // Drag & Drop PDFs
+        const dropzonePdf = document.getElementById('dropzonePdf');
+        dropzonePdf.addEventListener('click', () => document.getElementById('pdfInput').click());
+        dropzonePdf.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropzonePdf.classList.add('dragover');
+        });
+        dropzonePdf.addEventListener('dragleave', () => dropzonePdf.classList.remove('dragover'));
+        dropzonePdf.addEventListener('drop', (e) => {
+            e.preventDefault();
+            document.getElementById('pdfInput').files = e.dataTransfer.files;
+            dropzonePdf.classList.remove('dragover');
+        });
+    </script>
+
+</body>
+</html>
